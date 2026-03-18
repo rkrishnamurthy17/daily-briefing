@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Morning Briefing</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0b0d14;
+  --bg-card: #10131d;
+  --bg-card-hover: #141824;
+  --border: #1c2030;
+  --border-bright: #252a3d;
+  --gold: #c9a84c;
+  --gold-dim: #7a6230;
+  --text: #eae5d8;
+  --text-muted: #5c5a54;
+  --text-dim: #8a8880;
+  --red: #b85c46;
+  --red-bg: rgba(184,92,70,0.1);
+  --red-border: rgba(184,92,70,0.25);
+  --green: #4a8a62;
+  --green-bg: rgba(74,138,98,0.1);
+  --green-border: rgba(74,138,98,0.25);
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-mono: 'DM Mono', 'Courier New', monospace;
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+#app {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 48px 28px 80px;
+}
+
+/* ── Header ── */
+.rule-gold { border: none; border-top: 1px solid var(--gold); }
+.rule-dim  { border: none; border-top: 1px solid var(--border); }
+
+.header-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 2px;
+  font-size: 9.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.masthead {
+  text-align: center;
+  padding: 18px 0 10px;
+}
+
+.masthead h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(42px, 7vw, 72px);
+  letter-spacing: -0.025em;
+  line-height: 1;
+  color: var(--text);
+}
+
+.masthead .greeting {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 17px;
+  color: var(--gold);
+  margin-top: 6px;
+}
+
+.header-spacer { margin-bottom: 32px; }
+
+/* ── Inputs ── */
+.inputs-section {
+  margin-bottom: 28px;
+  display: grid;
+  gap: 14px;
+}
+
+.input-group { display: flex; flex-direction: column; gap: 7px; }
+
+.input-label {
+  font-size: 8.5px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--gold-dim);
+}
+
+.input-sub {
+  font-size: 9.5px;
+  color: var(--text-muted);
+  margin-top: -4px;
+}
+
+input[type="text"], textarea {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  padding: 11px 14px;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.2s;
+  resize: vertical;
+}
+
+input[type="text"]:focus,
+textarea:focus { border-color: var(--gold-dim); }
+
+input::placeholder, textarea::placeholder { color: var(--text-muted); }
+
+/* ── Button ── */
+.btn-wrap { text-align: center; margin: 8px 0 12px; }
+
+.btn-generate {
+  background: transparent;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  padding: 15px 42px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+.btn-generate:hover:not(:disabled) {
+  background: var(--gold);
+  color: var(--bg);
+  box-shadow: 0 0 24px rgba(201,168,76,0.2);
+}
+
+.btn-generate:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ── Loading ── */
+.loading-wrap { text-align: center; padding: 40px 0; animation: fadeIn 0.3s ease; }
+
+.loading-text {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.loading-bar-wrap {
+  width: 200px; height: 1px;
+  background: var(--border);
+  margin: 0 auto; overflow: hidden; position: relative;
+}
+
+.loading-bar {
+  position: absolute; top: 0; left: -60%;
+  width: 60%; height: 100%;
+  background: var(--gold);
+  animation: slide 1.6s ease-in-out infinite;
+}
+
+@keyframes slide { 0% { left: -60%; } 100% { left: 100%; } }
+
+/* ── Results ── */
+.results-wrap { animation: fadeUp 0.5s ease both; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.generated-at {
+  text-align: right;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.full { grid-column: 1 / -1; }
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 22px;
+  transition: border-color 0.2s;
+}
+.card:hover { border-color: var(--border-bright); }
+
+.card-label {
+  font-size: 8.5px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--gold-dim);
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.card-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* ── Events ── */
+.event-item {
+  display: grid;
+  grid-template-columns: 58px 1fr;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+}
+.event-item:last-child  { border-bottom: none; padding-bottom: 0; }
+.event-item:first-child { padding-top: 0; }
+.event-time { font-size: 10.5px; color: var(--gold); padding-top: 1px; white-space: nowrap; }
+.event-title { font-size: 12px; color: var(--text); line-height: 1.4; }
+.event-duration { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
+
+/* ── Emails ── */
+.email-item {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.email-item:last-child  { border-bottom: none; padding-bottom: 0; }
+.email-item:first-child { padding-top: 0; }
+
+.badge {
+  display: inline-block;
+  font-size: 7.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  margin-bottom: 5px;
+  border-width: 1px; border-style: solid;
+}
+.badge-action { background: var(--red-bg); color: var(--red); border-color: var(--red-border); }
+.badge-fyi    { background: var(--green-bg); color: var(--green); border-color: var(--green-border); }
+
+.email-from    { font-size: 9.5px; letter-spacing: 0.07em; color: var(--gold); margin-bottom: 3px; }
+.email-subject { font-size: 12px; color: var(--text); line-height: 1.35; margin-bottom: 4px; }
+.email-summary { font-size: 10.5px; color: var(--text-dim); line-height: 1.55; }
+
+/* ── Actions ── */
+.action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; }
+
+.action-item {
+  display: flex; gap: 10px;
+  font-size: 12px; color: var(--text); line-height: 1.45;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+.action-item:last-child { border-bottom: none; }
+.action-arrow { color: var(--gold); flex-shrink: 0; }
+
+.morning-note {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 14.5px;
+  line-height: 1.75;
+  color: var(--text-dim);
+  border-top: 1px solid var(--border);
+  margin-top: 18px;
+  padding-top: 18px;
+}
+
+.empty {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 4px 0;
+}
+
+.error-card {
+  background: var(--red-bg);
+  border: 1px solid var(--red-border);
+  padding: 20px 24px;
+  text-align: center;
+  animation: fadeIn 0.3s ease;
+}
+.error-title { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--red); margin-bottom: 8px; }
+.error-msg   { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.footer {
+  margin-top: 48px;
+  text-align: center;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+@media (max-width: 560px) {
+  .grid        { grid-template-columns: 1fr; }
+  .action-grid { grid-template-columns: 1fr; }
+  .full        { grid-column: 1; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <hr class="rule-gold">
+  <div class="header-meta">
+    <span id="day-label">—</span>
+    <span>Personal Intelligence Briefing</span>
+    <span id="date-label">—</span>
+  </div>
+  <hr class="rule-dim">
+
+  <div class="masthead">
+    <h1>Morning Briefing</h1>
+    <p class="greeting" id="greeting">Good morning.</p>
+  </div>
+
+  <hr class="rule-dim">
+  <div class="header-spacer"></div>
+
+  <!-- Inputs -->
+  <div class="inputs-section">
+    <div class="input-group">
+      <div class="input-label">Google Calendar ICS URL</div>
+      <div class="input-sub">Settings → "Secret address in iCal format" in Google Calendar</div>
+      <input type="text" id="cal-url" placeholder="https://calendar.google.com/calendar/ical/...">
+    </div>
+    <div class="input-group">
+      <div class="input-label">Email Context <span style="color:var(--text-muted);font-size:9px;letter-spacing:0.05em;text-transform:none">(optional)</span></div>
+      <div class="input-sub">Paste any emails you want analyzed — subject lines, snippets, or full text</div>
+      <textarea id="email-ctx" rows="5" placeholder="From: John Smith&#10;Subject: Q2 strategy review — can you prep slides by Thursday?&#10;&#10;From: Wharton Career Services&#10;Subject: Reminder: consulting trek sign-up closes today"></textarea>
+    </div>
+  </div>
+
+  <div class="btn-wrap">
+    <button class="btn-generate" id="gen-btn" onclick="generateBriefing()">
+      Generate Today's Briefing
+    </button>
+  </div>
+
+  <div id="status"></div>
+  <div id="results"></div>
+
+  <div class="footer">Powered by Claude · Your Calendar · Your Inbox</div>
+</div>
+
+<script>
+const now = new Date();
+
+const dayName  = now.toLocaleDateString('en-US', { weekday: 'long' });
+const dateStr  = now.toISOString().split('T')[0];
+const hour     = now.getHours();
+const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+
+document.getElementById('day-label').textContent  = dayName.toUpperCase();
+document.getElementById('date-label').textContent = now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase();
+document.getElementById('greeting').textContent   = `${greeting}.`;
+
+const messages = ['Fetching your calendar…', 'Reading your emails…', 'Composing your briefing…', 'Almost ready…'];
+let msgIdx = 0, msgTimer = null;
+
+function setLoading(msg) {
+  document.getElementById('status').innerHTML = `
+    <div class="loading-wrap">
+      <div class="loading-text">${msg}</div>
+      <div class="loading-bar-wrap"><div class="loading-bar"></div></div>
+    </div>`;
+}
+
+async function generateBriefing() {
+  const btn   = document.getElementById('gen-btn');
+  const calUrl = document.getElementById('cal-url').value.trim();
+  const emailCtx = document.getElementById('email-ctx').value.trim();
+
+  btn.disabled = true;
+  document.getElementById('results').innerHTML = '';
+
+  msgIdx = 0;
+  setLoading(messages[0]);
+  msgTimer = setInterval(() => {
+    msgIdx = (msgIdx + 1) % messages.length;
+    setLoading(messages[msgIdx]);
+  }, 3200);
+
+  try {
+    const resp = await fetch('/api/briefing', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ calendarUrl: calUrl, emailContext: emailCtx, date: dateStr, dayName })
+    });
+
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || `Server error ${resp.status}`);
+
+    clearInterval(msgTimer);
+    document.getElementById('status').innerHTML = '';
+    renderBriefing(data);
+
+  } catch (err) {
+    clearInterval(msgTimer);
+    document.getElementById('status').innerHTML = `
+      <div class="error-card">
+        <div class="error-title">Briefing Unavailable</div>
+        <div class="error-msg">${err.message || 'Unexpected error. Please try again.'}</div>
+      </div>`;
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Refresh Briefing';
+}
+
+function renderBriefing(b) {
+  const events  = Array.isArray(b.events)           ? b.events           : [];
+  const emails  = Array.isArray(b.email_highlights) ? b.email_highlights : [];
+  const actions = Array.isArray(b.action_items)     ? b.action_items     : [];
+  const note    = typeof b.morning_note === 'string' ? b.morning_note    : '';
+
+  const timeLabel = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+  const eventsHTML = events.length
+    ? events.map(e => `
+        <div class="event-item">
+          <div class="event-time">${esc(e.time||'—')}</div>
+          <div>
+            <div class="event-title">${esc(e.title||'Untitled')}</div>
+            ${e.duration ? `<div class="event-duration">${esc(e.duration)}</div>` : ''}
+          </div>
+        </div>`).join('')
+    : `<p class="empty">No events scheduled today.</p>`;
+
+  const emailsHTML = emails.length
+    ? emails.map(e => `
+        <div class="email-item">
+          <span class="badge ${e.action_needed ? 'badge-action' : 'badge-fyi'}">${e.action_needed ? 'Action' : 'FYI'}</span>
+          <div class="email-from">${esc(e.from||'')}</div>
+          <div class="email-subject">${esc(e.subject||'')}</div>
+          <div class="email-summary">${esc(e.summary||'')}</div>
+        </div>`).join('')
+    : `<p class="empty">No emails analyzed.</p>`;
+
+  const actionsHTML = actions.length
+    ? `<div class="action-grid">${actions.map(a => `
+        <div class="action-item">
+          <span class="action-arrow">→</span>
+          <span>${esc(a)}</span>
+        </div>`).join('')}</div>`
+    : `<p class="empty">No action items surfaced.</p>`;
+
+  document.getElementById('results').innerHTML = `
+    <div class="results-wrap">
+      <div class="generated-at">Generated at ${timeLabel}</div>
+      <div class="grid">
+        <div class="card">
+          <div class="card-label">Today's Schedule</div>
+          ${eventsHTML}
+        </div>
+        <div class="card">
+          <div class="card-label">Email Highlights</div>
+          ${emailsHTML}
+        </div>
+        <div class="card full">
+          <div class="card-label">Your Action Plan</div>
+          ${actionsHTML}
+          ${note ? `<p class="morning-note">${esc(note)}</p>` : ''}
+        </div>
+      </div>
+    </div>`;
+}
+
+function esc(str) {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>

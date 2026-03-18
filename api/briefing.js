@@ -8,20 +8,24 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "API key not configured." });
   }
 
-  const { calendarUrl, emailContext, date, dayName } = req.body || {};
+  const { calendarUrls, emailContext, date, dayName } = req.body || {};
 
-  // Optionally fetch and parse ICS calendar data
+  // Fetch and parse all ICS calendar URLs
   let calendarText = "";
-  if (calendarUrl && calendarUrl.startsWith("https://")) {
-    try {
-      const icsResp = await fetch(calendarUrl);
-      if (icsResp.ok) {
+  const urls = Array.isArray(calendarUrls) ? calendarUrls.filter(Boolean) : [];
+  if (urls.length) {
+    const results = await Promise.all(urls.map(async (url, idx) => {
+      if (!url.startsWith("https://")) return null;
+      try {
+        const icsResp = await fetch(url);
+        if (!icsResp.ok) return null;
         const icsRaw = await icsResp.text();
-        calendarText = parseICS(icsRaw, date);
+        return parseICS(icsRaw, date, idx + 1);
+      } catch {
+        return null;
       }
-    } catch {
-      calendarText = "Could not fetch calendar.";
-    }
+    }));
+    calendarText = results.filter(Boolean).join("\n\n");
   }
 
   const userContent = `
@@ -96,7 +100,7 @@ Rules:
 }
 
 // Minimal ICS parser — extracts today's events
-function parseICS(icsText, targetDate) {
+function parseICS(icsText, targetDate, calIdx = 1) {
   const events = [];
   const blocks = icsText.split("BEGIN:VEVENT");
 
@@ -119,8 +123,8 @@ function parseICS(icsText, targetDate) {
   }
 
   return events.length
-    ? `Today's events:\n${events.join("\n")}`
-    : "No events found for today in calendar.";
+    ? `Calendar ${calIdx} events:\n${events.join("\n")}`
+    : null;
 }
 
 function extractField(block, field) {

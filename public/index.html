@@ -333,9 +333,12 @@ input::placeholder, textarea::placeholder { color: var(--text-muted); }
   <!-- Inputs -->
   <div class="inputs-section">
     <div class="input-group">
-      <div class="input-label">Google Calendar ICS URL</div>
-      <div class="input-sub">Settings → "Secret address in iCal format" in Google Calendar</div>
-      <input type="text" id="cal-url" placeholder="https://calendar.google.com/calendar/ical/...">
+      <div class="input-label">Calendar ICS URLs <span style="color:var(--text-muted);font-size:9px;letter-spacing:0.05em;text-transform:none">(up to 4)</span></div>
+      <div class="input-sub">Google: Settings → "Secret address in iCal format" · Works with any calendar that exports ICS</div>
+      <input type="text" id="cal-url-1" placeholder="Calendar 1 — https://calendar.google.com/calendar/ical/..." style="margin-bottom:8px">
+      <input type="text" id="cal-url-2" placeholder="Calendar 2 (optional)" style="margin-bottom:8px">
+      <input type="text" id="cal-url-3" placeholder="Calendar 3 (optional)" style="margin-bottom:8px">
+      <input type="text" id="cal-url-4" placeholder="Calendar 4 (optional)">
     </div>
     <div class="input-group">
       <div class="input-label">Email Context <span style="color:var(--text-muted);font-size:9px;letter-spacing:0.05em;text-transform:none">(optional)</span></div>
@@ -381,7 +384,9 @@ function setLoading(msg) {
 
 async function generateBriefing() {
   const btn   = document.getElementById('gen-btn');
-  const calUrl = document.getElementById('cal-url').value.trim();
+  const calUrls = [1,2,3,4]
+    .map(i => document.getElementById(`cal-url-${i}`).value.trim())
+    .filter(Boolean);
   const emailCtx = document.getElementById('email-ctx').value.trim();
 
   btn.disabled = true;
@@ -398,7 +403,7 @@ async function generateBriefing() {
     const resp = await fetch('/api/briefing', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ calendarUrl: calUrl, emailContext: emailCtx, date: dateStr, dayName })
+      body: JSON.stringify({ calendarUrls: calUrls, emailContext: emailCtx, date: dateStr, dayName })
     });
 
     const data = await resp.json();
